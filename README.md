@@ -1,4 +1,5 @@
 # MySQL-Tree-Catalog
-Save tree structure with 2 tables
-2 Table Scheme and recursive procedure.
+Save tree structure in 2 tables.
+
+Table Scheme (tree.sql) and recursive procedure (query.sql).
 
