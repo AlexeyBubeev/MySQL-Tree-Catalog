@@ -3,47 +3,43 @@
 ### 2) use PROCEDURE because recoursion forbidden in MySQL for function/trigger.
 ###	PS: recursion is limited <1000
 
-CREATE TABLE catalog (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  name varchar(50) DEFAULT NULL,
-  PRIMARY KEY (id),
-  UNIQUE INDEX UK_catalog_id (id)
-)
+#USE your_db_name;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `get_children`;
+CREATE PROCEDURE `get_children`(IN PNAME text)
+READS SQL DATA
+BEGIN
+  /* We'll save data in "child_name" variable */
+  DECLARE child_name text;
+  /* handler declaration*/
+  DECLARE eol BOOLEAN;
+  /* cursor declaration */
+  DECLARE csr CURSOR FOR SELECT c.name FROM bind b 
+    LEFT JOIN catalog c ON b.child_id = c.id
+    LEFT JOIN(SELECT c.name AS subname, b.id FROM bind b, catalog c WHERE c.id= b.parent_id) AS s ON s.id = b.id
+    WHERE s.subname = PNAME AND b.child_id IS NOT NULL;
+  /* QUIT HANDLER*/
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET eol = TRUE;
+  /* set limit */
+  SET max_sp_recursion_depth=1000;
+  /* open cursor */
+  OPEN csr;
+  /* extract data */
+    my_loop: LOOP
+        FETCH csr INTO child_name;
+        IF eol 
+            THEN
+            /* close cursor */
+            CLOSE csr;
+            LEAVE my_loop;
+        ELSE
+            CALL get_children(child_name);
+        END IF;
 
-INSERT INTO catalog(id, name) VALUES
-(1, 'build_1');
-INSERT INTO catalog(id, name) VALUES
-(2, 'part_1');
-INSERT INTO catalog(id, name) VALUES
-(3, 'roduct_1');
-INSERT INTO catalog(id, name) VALUES
-(4, 'roduct_2');
-INSERT INTO catalog(id, name) VALUES
-(5, 'part_2');
-INSERT INTO catalog(id, name) VALUES
-(6, 'part_3');
+        SELECT child_name;
 
-### bind table is the catalog's tree relationship table
+    END LOOP my_loop;
+END $$
 
-CREATE TABLE bind (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  parent_id int(11) DEFAULT NULL,
-  child_id int(11) DEFAULT NULL,
-  PRIMARY KEY (id),
-  CONSTRAINT FK_bind_catalog_id FOREIGN KEY (parent_id)
-  REFERENCES catalog (id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT FK_bind_catalog_id2 FOREIGN KEY (child_id)
-  REFERENCES catalog (id) ON DELETE NO ACTION ON UPDATE NO ACTION
-)
-
-INSERT INTO bind(id, parent_id, child_id) VALUES
-(1, 3, 1);
-INSERT INTO bind(id, parent_id, child_id) VALUES
-(2, 1, 2);
-INSERT INTO bind(id, parent_id, child_id) VALUES
-(3, 1, 5);
-INSERT INTO bind(id, parent_id, child_id) VALUES
-(4, 4, 6);
-INSERT INTO bind(id, parent_id, child_id) VALUES
-(5, 4, 5);
+CALL get_children('product_1');

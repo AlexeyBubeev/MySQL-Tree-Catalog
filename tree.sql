@@ -15,9 +15,9 @@ INSERT INTO catalog(id, name) VALUES
 INSERT INTO catalog(id, name) VALUES
 (2, 'part_1');
 INSERT INTO catalog(id, name) VALUES
-(3, 'roduct_1');
+(3, 'product_1');
 INSERT INTO catalog(id, name) VALUES
-(4, 'roduct_2');
+(4, 'product_2');
 INSERT INTO catalog(id, name) VALUES
 (5, 'part_2');
 INSERT INTO catalog(id, name) VALUES
